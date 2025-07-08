@@ -212,10 +212,34 @@ execute_git_operations() {
     else
         print_info "没有未提交的修改"
     fi
-
+    
+    # 强制拉取远程代码
+    print_info "强制拉取远程代码..."
+    if ! git fetch origin; then
+        print_error "拉取远程代码失败！"
+        print_error "请检查网络连接或远程仓库配置"
+        exit 1
+    fi
+    
+    # 检查目标分支是否存在
+    if ! git show-ref --verify --quiet refs/remotes/origin/"$target_branch"; then
+        print_error "远程分支 $target_branch 不存在！"
+        print_error "请确认分支名称正确或先创建该分支"
+        exit 1
+    fi
+    
     # 切换到目标分支并合并
     print_info "切换到 $target_branch 分支并合并..."
     git checkout "$target_branch"
+    
+    # 强制重置到远程分支状态
+    print_info "强制重置到远程分支状态..."
+    if ! git reset --hard "origin/$target_branch"; then
+        print_error "重置到远程分支失败！"
+        print_error "请检查远程分支状态"
+        exit 1
+    fi
+    
     local merge_message="$(date '+%Y-%m-%d %H:%M:%S') $current_branch 合并到 $target_branch"
     
     # 执行合并并检查是否出现冲突
