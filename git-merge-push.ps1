@@ -163,20 +163,40 @@ function Execute-GitOperations {
     while ($i -lt $Args.Count) {
         switch ($Args[$i]) {
             "-b" { 
-                $targetBranch = $Args[$i + 1]
-                $i += 2
+                if ($i + 1 -lt $Args.Count) {
+                    $targetBranch = $Args[$i + 1]
+                    $i += 2
+                } else {
+                    Write-Error "Missing value for -b parameter"
+                    return $false
+                }
             }
             "--branch" { 
-                $targetBranch = $Args[$i + 1]
-                $i += 2
+                if ($i + 1 -lt $Args.Count) {
+                    $targetBranch = $Args[$i + 1]
+                    $i += 2
+                } else {
+                    Write-Error "Missing value for --branch parameter"
+                    return $false
+                }
             }
             "-m" { 
-                $commitMessage = $Args[$i + 1]
-                $i += 2
+                if ($i + 1 -lt $Args.Count) {
+                    $commitMessage = $Args[$i + 1]
+                    $i += 2
+                } else {
+                    Write-Error "Missing value for -m parameter"
+                    return $false
+                }
             }
             "--message" { 
-                $commitMessage = $Args[$i + 1]
-                $i += 2
+                if ($i + 1 -lt $Args.Count) {
+                    $commitMessage = $Args[$i + 1]
+                    $i += 2
+                } else {
+                    Write-Error "Missing value for --message parameter"
+                    return $false
+                }
             }
             default {
                 # If no parameter name specified, consider as commit message
