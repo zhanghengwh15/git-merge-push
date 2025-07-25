@@ -212,12 +212,49 @@ execute_git_operations() {
     else
         print_info "没有未提交的修改"
     fi
-
+    
+    # 强制拉取远程代码
+    print_info "强制拉取远程代码..."
+    if ! git fetch origin; then
+        print_error "拉取远程代码失败！"
+        print_error "请检查网络连接或远程仓库配置"
+        exit 1
+    fi
+    
+    # 检查目标分支是否存在
+    if ! git show-ref --verify --quiet refs/remotes/origin/"$target_branch"; then
+        print_error "远程分支 $target_branch 不存在！"
+        print_error "请确认分支名称正确或先创建该分支"
+        exit 1
+    fi
+    
     # 切换到目标分支并合并
     print_info "切换到 $target_branch 分支并合并..."
     git checkout "$target_branch"
+    
+    # 强制重置到远程分支状态
+    print_info "强制重置到远程分支状态..."
+    if ! git reset --hard "origin/$target_branch"; then
+        print_error "重置到远程分支失败！"
+        print_error "请检查远程分支状态"
+        exit 1
+    fi
+    
     local merge_message="$(date '+%Y-%m-%d %H:%M:%S') $current_branch 合并到 $target_branch"
-    git merge "$current_branch" -m "$merge_message" --no-edit
+    
+    # 执行合并并检查是否出现冲突
+    if ! git merge "$current_branch" -m "$merge_message" --no-edit; then
+        print_error "合并出现冲突！"
+        print_error "请手动解决冲突后，执行以下命令完成合并："
+        print_info "1. 解决冲突文件"
+        print_info "2. git add ."
+        print_info "3. git commit"
+        print_info "4. 重新运行此脚本"
+        print_warning "当前分支: $target_branch"
+        print_warning "原分支: $current_branch"
+        print_warning "项目根目录: $project_root"
+        exit 1
+    fi
 
     # 如果启用编译检查，在目标分支上进行轻量级编译检查
     if [ "$ENABLE_COMPILE" = true ]; then
